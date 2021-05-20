@@ -1,5 +1,3 @@
-# This is a sample Python script.
-
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -14,5 +12,7 @@ if __name__ == '__main__':
     s.cam_commission("image-buffer-test")
 
     s.cam_capture(0)
-    key = s.cam_capture_upload()
-    print("Image uploaded with key " + key)
+#    key = s.cam_upload_currentImg()
+#    print("Image uploaded with key " + key)
+
+    s.cam_download_currentImg()

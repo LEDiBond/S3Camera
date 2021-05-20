@@ -1,0 +1,13 @@
+Here we define some of the objectives that we want to achieve
+
+1. Write a class that can define a camera on a client site to capture images
+    class S3Camera
+    defines a camera to work with AWS S3
+    Bare bone arch for developing a storage service of images that can be later scaled up
+    class functions so far
+        1. commisioning : bucket info related to the project
+        2. Image capture
+        3. data upload
+2. Bash script writing to run a .sh file and initialize all access keys and default values for a project to a camera.
+
+3. Create a detector class to utilize a weight and model to perform detection and update a jason/ log for detections
