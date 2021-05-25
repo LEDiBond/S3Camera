@@ -1,6 +1,8 @@
 
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
+# for uploading new images on AWS
+
+if __name__ == '__uploadScript__':
     from S3Camera import S3Camera
 
     # DEMO DETAIL ABOUT THE CAMERA
@@ -11,10 +13,4 @@ if __name__ == '__main__':
     # connect the object with the name of the same project
     s.cam_commission("image-buffer-test")
 
-    #s.cam_capture(0)
-    #s.cam_stream(0)
-#    key = s.cam_upload_currentImg()
-#    print("Image uploaded with key " + key)
-
-   # s.cam_stream_detect()
-    s.subp_cmd_single_img_det()
+   # s.cam_stream_detect(delay_sec = 10)

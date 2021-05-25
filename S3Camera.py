@@ -187,18 +187,15 @@ class S3Camera:
                     ret = True
                     if ret:
                         print("Image Downloaded")
-                        current_path = os.getcwd()
-                        os.system("cd ..")
-                        os.system("cd " + darknet_dir)
-
+                        ## calling darknet subprocess
                         self.subp_cmd_single_img_det()
+
                         print("............Prediction done .......")
                         pred = json.load(open("result.json"))
                         print(pred)
                     else:
                         print("Image Downloading failed")
                         action = False
-
 
                     # Resetting the timer
                     start = time.time()
