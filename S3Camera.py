@@ -6,6 +6,8 @@ import boto3
 import cv2
 from termcolor import colored
 from datetime import datetime
+import os
+import json
 
 
 class S3Camera:
@@ -54,18 +56,21 @@ class S3Camera:
         except IOError:
             print(IOError)
 
-    def cam_download_currentImg(self):
+    def cam_download_currentImg(self, Filename = 'Downloaded_file.jpg'):
+        data = False
         if self.camera_commission_status != "Not Commissioned":
-            data = self.camera_s3_client.download_file(self.camera_project_association, Key=self.default_image_name,
-                                                       Filename='Downloaded_file.jpg')
+            self.camera_s3_client.download_file(self.camera_project_association, Key=self.default_image_name,
+                                                       Filename=Filename)
             print("Data upload Successful \n Bucket used : " + colored(self.camera_project_association,
-                                                                       'green') + "With Key: " + colored(
-                self.default_image_name, 'green'))
-            print("File downloaded to file" + colored('Downloaded_file.jpeg', 'red'))
+                'green') + "With Key: " + colored(self.default_image_name, 'green'))
+            print("File downloaded to file :" + colored(Filename, 'red'))
+            data = True
+
         elif self.camera_commission_status == "Not Commissioned":
             print("Camera not commissioned")
         else:
             print("Error with commissioning, Please check Bucket credential and try again:")
+
         return data
 
     def cam_capture(self, webcam_id):
@@ -106,16 +111,15 @@ class S3Camera:
             interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
         print("Stream stopped ")
 
-    def cam_stream_opti(self, webcam_id = 0):
+    def cam_stream_upload(self, webcam_id = 0, delay_sec = 5):
         start = time.time()
-        seconds = 10
         action = True
         try:
             while action:
                 current_time = time.time()
                 elapsed_time = current_time - start
                 print(str(round(elapsed_time, 0)) + "Seconds elapsed", end='\r')
-                if elapsed_time > seconds:
+                if elapsed_time > delay_sec:
                     print("Called function")
 
                     # Camera capture function called
@@ -135,3 +139,109 @@ class S3Camera:
 
         print("...........Stream stopped..............")
         return action
+
+    def cam_stream_download(self, delay_sec = 5):
+        start = time.time()
+        action = True
+        try:
+            while action:
+                current_time = time.time()
+                elapsed_time = current_time - start
+                print(str(round(elapsed_time, 0)) + "Seconds elapsed", end='\r')
+                if elapsed_time > delay_sec:
+                    print("Called function")
+
+                    # Image download function
+                    ret = self.cam_download_currentImg()
+                    # write condition for download failure
+                    if ret:
+                        print("Image Downloaded")
+                    else:
+                        print("Image Downloading failed")
+                        action = False
+                    # Resetting the timer
+                    start = time.time()
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt made")
+            interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
+        print("...........Stream Download stopped..............")
+        return action
+
+    def cam_stream_detect(self, delay_sec = 5, darknet_dir = "/home/chaoster"):
+     #has dependencies on darknet
+        home_path = "/home/chaoster/S3Camera/"
+        darknet_path = "/home/chaoster/darknet/"
+        start = time.time()
+        action = True
+        try:
+            while action:
+                current_time = time.time()
+                elapsed_time = current_time - start
+                print(str(round(elapsed_time, 0)) + "Seconds elapsed", end='\r')
+                if elapsed_time > delay_sec:
+                    print("Called function")
+
+                    # Image download function
+                    ret = self.cam_download_currentImg()
+                    # write condition for download failure
+                    ret = True
+                    if ret:
+                        print("Image Downloaded")
+                        current_path = os.getcwd()
+                        os.system("cd ..")
+                        os.system("cd " + darknet_dir)
+
+                        self.subp_cmd_single_img_det()
+                        print("............Prediction done .......")
+                        pred = json.load(open("result.json"))
+                        print(pred)
+                    else:
+                        print("Image Downloading failed")
+                        action = False
+
+
+                    # Resetting the timer
+                    start = time.time()
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt made")
+            interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
+
+        print("...........Stream Download stopped..............")
+        return action
+
+    def os_cmd_list_based_darknet_detect(self):
+        home_path = "/home/chaoster/S3Camera/"
+        darknet_path = "/home/chaoster/darknet/"
+        os.system(darknet_path + "./darknet detector test " +
+                  darknet_path + "cfg/coco.data " +
+                  darknet_path + "cfg/yolov4.cfg " +
+                  darknet_path + "yolov4.weights" +
+                  " -ext_output -dont_show -out result.json <" +
+                  darknet_path + "current_img_dir.txt")
+
+    def os_cmd_single_img_det(self):
+        from subprocess import DEVNULL, STDOUT, check_call
+        home_path = "/home/chaoster/S3Camera/"
+        darknet_path = "/home/chaoster/darknet/"
+        os.system(darknet_path + "./darknet detector test " +
+                  darknet_path + "cfg/coco.data " +
+                  darknet_path + "cfg/yolov4.cfg " +
+                  darknet_path + "yolov4.weights" +
+                  " -ext_output -dont_show -out result.json " +
+                  home_path + "Downloaded_file.jpg")
+
+
+    def subp_cmd_single_img_det(self):
+        from subprocess import run, call, DEVNULL, STDOUT, check_call
+        home_path = "/home/chaoster/S3Camera/"
+        darknet_path = "/home/chaoster/darknet/"
+
+        call([darknet_path + "./darknet", "detector", "test",
+                  darknet_path + "cfg/coco.data",
+                  darknet_path + "cfg/yolov4.cfg",
+                  darknet_path + "yolov4.weights",
+                  "-ext_output", "-dont_show", "-out", "result.json",
+                  home_path + "Downloaded_file.jpg"], stdout=False)
+
+
+
