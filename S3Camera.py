@@ -1,4 +1,6 @@
 import os
+import time
+
 import cv2
 import boto3
 import cv2
@@ -69,12 +71,13 @@ class S3Camera:
     def cam_capture(self, webcam_id):
         cam = cv2.VideoCapture(webcam_id)
         height = 1080
-        width =  1900
+        width = 1900
         cam.set(3, height)
         cam.set(4, width)
         img, frame = cam.read()
-        cv2.imwrite(self.default_image_name, frame)
+        ret = cv2.imwrite(self.default_image_name, frame)
         cam.release()
+        return ret
 
     def cam_stream(self, webcam_id, delay=10):
         print("Starting Stream from " + colored("webcam_id ", 'green') + ":" + colored(webcam_id, 'red'))
@@ -87,8 +90,7 @@ class S3Camera:
             while interrupt != "stop":
                 if (datetime.now().time().second % delay == 0) & (flag == False):
 
-                    self.cam_capture(webcam_id)
-                    #self.cam_upload_currentImg()
+
                     print("Dummy thing do")
                     flag = True
                     print( str(index) + "th image clicked and uploaded")
@@ -103,3 +105,33 @@ class S3Camera:
             print("Keyboard Interrupt made")
             interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
         print("Stream stopped ")
+
+    def cam_stream_opti(self, webcam_id = 0):
+        start = time.time()
+        seconds = 10
+        action = True
+        try:
+            while action:
+                current_time = time.time()
+                elapsed_time = current_time - start
+                print(str(round(elapsed_time, 0)) + "Seconds elapsed", end='\r')
+                if elapsed_time > seconds:
+                    print("Called function")
+
+                    # Camera capture function called
+                    ret = self.cam_capture(webcam_id)
+
+                    # Camera upload function called
+                    if ret:
+                        self.cam_upload_currentImg()
+                    else:
+                        action = False
+
+                    # Resetting the timer
+                    start = time.time()
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt made")
+            interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
+
+        print("...........Stream stopped..............")
+        return action
