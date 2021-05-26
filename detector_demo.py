@@ -13,4 +13,4 @@ if __name__ == '__uploadScript__':
     # connect the object with the name of the same project
     s.cam_commission("image-buffer-test")
 
-   # s.cam_stream_detect(delay_sec = 10)
+    s.cam_stream_detect(delay_sec = 5)
