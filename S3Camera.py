@@ -206,6 +206,9 @@ class S3Camera:
         print("...........Stream Download stopped..............")
         return action
 
+
+    ## will deprecate when darknet is locally installed
+
     def os_cmd_list_based_darknet_detect(self):
         home_path = "/home/chaoster/S3Camera/"
         darknet_path = "/home/chaoster/darknet/"
@@ -216,6 +219,8 @@ class S3Camera:
                   " -ext_output -dont_show -out result.json <" +
                   darknet_path + "current_img_dir.txt")
 
+
+    ## will deprecate when darknet is locally installed
     def os_cmd_single_img_det(self):
         from subprocess import DEVNULL, STDOUT, check_call
         home_path = "/home/chaoster/S3Camera/"
@@ -227,7 +232,7 @@ class S3Camera:
                   " -ext_output -dont_show -out result.json " +
                   home_path + "Downloaded_file.jpg")
 
-
+    ## will deprecate when darknet is locally installed
     def subp_cmd_single_img_det(self):
         from subprocess import run, call, DEVNULL, STDOUT, check_call
         home_path = "/home/chaoster/S3Camera/"
@@ -239,6 +244,3 @@ class S3Camera:
                   darknet_path + "yolov4.weights",
                   "-ext_output", "-dont_show", "-out", "result.json",
                   home_path + "Downloaded_file.jpg"], stdout=False)
-
-
-
