@@ -3,7 +3,8 @@
  "frame_id":1, 
  "filename":"Downloaded_file.jpg", 
  "objects": [ 
-
+  {"class_id":56, "name":"chair", "relative_coordinates":{"center_x":0.643334, "center_y":0.879483, "width":0.367705, "height":0.222823}, "confidence":0.526410}, 
+  {"class_id":0, "name":"person", "relative_coordinates":{"center_x":0.651218, "center_y":0.751022, "width":0.443162, "height":0.504804}, "confidence":0.873654}
  ] 
 }
 ]
