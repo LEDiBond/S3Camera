@@ -28,6 +28,8 @@ class S3Camera:
         # saved as "detection_result.json"
         self.default_image_name = "CURRENT_IMG.jpg"
         self.default_detection_ID = "detection_result.json"
+        self.darknet_detection_ID = "result.json"
+        self.default_downloaded_img_ID = "Downloaded_file.jpg"
 
     def __str__(self):
         return "Camera Physical address : " + self.camera_phy_mac + " \n " + \
@@ -67,6 +69,8 @@ class S3Camera:
 
     def cam_download_currentImg(self, Filename = 'Downloaded_file.jpg'):
         data = False
+        self.default_downloaded_img_ID = Filename
+        self.default_downloaded_img_ID = "Downloaded_file.jpg"
         if self.camera_commission_status != "Not Commissioned":
             self.camera_s3_client.download_file(self.camera_project_association, Key=self.default_image_name,
                                                        Filename=Filename)
@@ -195,7 +199,7 @@ class S3Camera:
                     if ret:
                         print("Image Downloaded")
                         ## calling darknet subprocess
-                        self.subp_cmd_single_img_det()
+                        self.subp_cmd_single_img_det_beta()
 
                         print("............Prediction done .......")
                         pred = json.load(open("result.json"))
@@ -203,7 +207,7 @@ class S3Camera:
 
                         # Upload prediction on bucket
                         if(online_update):
-                            self.camera_s3_client.upload_file(Filename=self.default_detection_ID,
+                            self.camera_s3_client.upload_file(Filename=self.darknet_detection_ID,
                                                           Bucket=self.camera_project_association,
                                                           Key=self.default_detection_ID)
                     else:
@@ -247,17 +251,16 @@ class S3Camera:
                   home_path + "Downloaded_file.jpg")
 
     ## will deprecate when darknet is locally installed
-    def subp_cmd_single_img_det(self):
+    def subp_cmd_single_img_det_beta(self):
         from subprocess import run, call, DEVNULL, STDOUT, check_call
-        home_path = "/home/chaoster/S3Camera/"
-        darknet_path = "/home/chaoster/darknet/"
-
-        call([darknet_path + "./darknet", "detector", "test",
-                  darknet_path + "cfg/coco.data",
-                  darknet_path + "cfg/yolov4.cfg",
-                  darknet_path + "yolov4.weights",
-                  "-ext_output", "-dont_show", "-out", "result.json",
-                  home_path + "Downloaded_file.jpg"], stdout=False)
+        call([ "./darknet", "detector", "test","cfg/coco.data",
+                "cfg/yolov4.cfg", # concerned cfg file
+                "yolov4.weights", # model weights
+                "-ext_output", "-dont_show", "-out",
+                self.darknet_detection_ID,  # output file name
+                self.default_downloaded_img_ID# image path and name
+               ],
+             stdout=False)
 
 #todo
 # write function to upload detection results to cloud
