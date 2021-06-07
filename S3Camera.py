@@ -13,12 +13,21 @@ import json
 class S3Camera:
 
     def __init__(self, camera_phy_mac="undefined", camera_phy_port="undefined"):
+
+
         self.camera_phy_mac = camera_phy_mac
         self.camera_phy_port = camera_phy_port
+
+        # Camera project association is a Tag that is unique for a project. Managers at AWS S3 utilize this tag to create a bucket for the project which act as
+        # a memory buffer for saving current image and results of detection.
         self.camera_project_association = "undefined"
         self.camera_commission_status = "Not Commissioned"
         self.camera_s3_client = None
+
+        # Variables to store file names. Current image captured is saved as "CURRENT_IMG.jpg" and Detection result is
+        # saved as "detection_result.json"
         self.default_image_name = "CURRENT_IMG.jpg"
+        self.default_detection_ID = "detection_result.json"
 
     def __str__(self):
         return "Camera Physical address : " + self.camera_phy_mac + " \n " + \
@@ -167,10 +176,8 @@ class S3Camera:
         print("...........Stream Download stopped..............")
         return action
 
-    def cam_stream_detect(self, delay_sec = 5, darknet_dir = "/home/chaoster"):
-     #has dependencies on darknet
-        home_path = "/home/chaoster/S3Camera/"
-        darknet_path = "/home/chaoster/darknet/"
+    def cam_stream_detect(self, delay_sec = 5, online_update = True ):
+     # has dependencies on darknet
         start = time.time()
         action = True
         try:
@@ -193,6 +200,12 @@ class S3Camera:
                         print("............Prediction done .......")
                         pred = json.load(open("result.json"))
                         print(pred)
+
+                        # Upload prediction on bucket
+                        if(online_update):
+                            self.camera_s3_client.upload_file(Filename=self.default_detection_ID,
+                                                          Bucket=self.camera_project_association,
+                                                          Key=self.default_detection_ID)
                     else:
                         print("Image Downloading failed")
                         action = False
@@ -208,6 +221,7 @@ class S3Camera:
 
 
     ## will deprecate when darknet is locally installed
+    ## hardcoded information need to be dynamic
 
     def os_cmd_list_based_darknet_detect(self):
         home_path = "/home/chaoster/S3Camera/"
@@ -244,3 +258,16 @@ class S3Camera:
                   darknet_path + "yolov4.weights",
                   "-ext_output", "-dont_show", "-out", "result.json",
                   home_path + "Downloaded_file.jpg"], stdout=False)
+
+#todo
+# write function to upload detection results to cloud
+# or update the existing functions to do so
+
+#todo
+# integrate darknet folder to S3Camera folder
+# and see how can we work.
+
+#todo
+# Write function to do on board detection of images captured
+# and only upload the result.json
+
