@@ -14,7 +14,6 @@ class S3Camera:
 
     def __init__(self, camera_phy_mac="undefined", camera_phy_port="undefined"):
 
-
         self.camera_phy_mac = camera_phy_mac
         self.camera_phy_port = camera_phy_port
 
@@ -67,15 +66,16 @@ class S3Camera:
         except IOError:
             print(IOError)
 
-    def cam_download_currentImg(self, Filename = 'Downloaded_file.jpg'):
+    def cam_download_currentImg(self, Filename='Downloaded_file.jpg'):
         data = False
         self.default_downloaded_img_ID = Filename
         self.default_downloaded_img_ID = "Downloaded_file.jpg"
         if self.camera_commission_status != "Not Commissioned":
             self.camera_s3_client.download_file(self.camera_project_association, Key=self.default_image_name,
-                                                       Filename=Filename)
+                                                Filename=Filename)
             print("Data upload Successful \n Bucket used : " + colored(self.camera_project_association,
-                'green') + "With Key: " + colored(self.default_image_name, 'green'))
+                                                                       'green') + "With Key: " + colored(
+                self.default_image_name, 'green'))
             print("File downloaded to file :" + colored(Filename, 'red'))
             data = True
 
@@ -108,10 +108,9 @@ class S3Camera:
             while interrupt != "stop":
                 if (datetime.now().time().second % delay == 0) & (flag == False):
 
-
                     print("Dummy thing do")
                     flag = True
-                    print( str(index) + "th image clicked and uploaded")
+                    print(str(index) + "th image clicked and uploaded")
                     index = index + 1
 
                 else:
@@ -124,7 +123,10 @@ class S3Camera:
             interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
         print("Stream stopped ")
 
-    def cam_stream_upload(self, webcam_id = 0, delay_sec = 5):
+    # Function to capture images at regular interval and upload on aws bucket from a commissisoned camera.
+    # The image is updated after every delay_sec. Camera id is needed or else default webcam_id = 0.
+
+    def cam_stream_upload(self, webcam_id=0, delay_sec=5):
         start = time.time()
         action = True
         try:
@@ -153,7 +155,9 @@ class S3Camera:
         print("...........Stream stopped..............")
         return action
 
-    def cam_stream_download(self, delay_sec = 5):
+    # function to Stream current images from a commissisoned camera. The image is updated after ecery delay_sec.
+
+    def cam_stream_download(self, delay_sec=5):
         start = time.time()
         action = True
         try:
@@ -180,8 +184,8 @@ class S3Camera:
         print("...........Stream Download stopped..............")
         return action
 
-    def cam_stream_detect(self, delay_sec = 5, online_update = True ):
-     # has dependencies on darknet
+    def cam_stream_detect(self, delay_sec=5, online_update=True):
+        # has dependencies on darknet
         start = time.time()
         action = True
         try:
@@ -198,7 +202,9 @@ class S3Camera:
                     ret = True
                     if ret:
                         print("Image Downloaded")
-                        ## calling darknet subprocess
+                        ## calling darknet subprocess to detect objects in the image
+                        ## darknet isntalled locally in the same folder
+                        ## no dependecies on darknet locations
                         self.subp_cmd_single_img_det_beta()
 
                         print("............Prediction done .......")
@@ -206,10 +212,10 @@ class S3Camera:
                         print(pred)
 
                         # Upload prediction on bucket
-                        if(online_update):
+                        if (online_update):
                             self.camera_s3_client.upload_file(Filename=self.darknet_detection_ID,
-                                                          Bucket=self.camera_project_association,
-                                                          Key=self.default_detection_ID)
+                                                              Bucket=self.camera_project_association,
+                                                              Key=self.default_detection_ID)
                     else:
                         print("Image Downloading failed")
                         action = False
@@ -222,7 +228,6 @@ class S3Camera:
 
         print("...........Stream Download stopped..............")
         return action
-
 
     ## will deprecate when darknet is locally installed
     ## hardcoded information need to be dynamic
@@ -237,40 +242,112 @@ class S3Camera:
                   " -ext_output -dont_show -out result.json <" +
                   darknet_path + "current_img_dir.txt")
 
-
-    ## will deprecate when darknet is locally installed
-    def os_cmd_single_img_det(self):
-        from subprocess import DEVNULL, STDOUT, check_call
-        home_path = "/home/chaoster/S3Camera/"
-        darknet_path = "/home/chaoster/darknet/"
-        os.system(darknet_path + "./darknet detector test " +
-                  darknet_path + "cfg/coco.data " +
-                  darknet_path + "cfg/yolov4.cfg " +
-                  darknet_path + "yolov4.weights" +
-                  " -ext_output -dont_show -out result.json " +
-                  home_path + "Downloaded_file.jpg")
-
-    ## will deprecate when darknet is locally installed
-    def subp_cmd_single_img_det_beta(self):
+    # if local = True then current image is used in prediction
+    # if local is false then image is downloaded
+    def subp_cmd_single_img_det_beta(self, local=True):
         from subprocess import run, call, DEVNULL, STDOUT, check_call
-        call([ "./darknet", "detector", "test","cfg/coco.data",
-                "cfg/yolov4.cfg", # concerned cfg file
-                "yolov4.weights", # model weights
-                "-ext_output", "-dont_show", "-out",
-                self.darknet_detection_ID,  # output file name
-                self.default_downloaded_img_ID# image path and name
-               ],
-             stdout=False)
+        if not local:
+            call(["./darknet", "detector", "test", "cfg/coco.data",
+                  "cfg/yolov4.cfg",  # concerned cfg file
+                  "yolov4.weights",  # model weights
+                  "-ext_output", "-dont_show", "-out",
+                  self.default_detection_ID,  # output file name
+                  self.default_downloaded_img_ID  # image path and name
+                  ],
+                 stdout=False)
+        else:
+            call(["./darknet", "detector", "test", "cfg/coco.data",
+                  "cfg/yolov4.cfg",  # concerned cfg file
+                  "yolov4.weights",  # model weights
+                  "-ext_output", "-dont_show", "-out",
+                  self.default_detection_ID,  # output file name (json)
+                  self.default_image_name  # image path and name
+                  ],
+                 stdout=False)
 
-#todo
-# write function to upload detection results to cloud
-# or update the existing functions to do so
+    # Function for site PC with cam detection and upload facilities
+    # Image captured locally and fed to darknet installed on the system
+    # Once the predection is made, The result jason script is uploaded along with curre
+    def local_cam_detect(self, webcam_id=0, delay_sec=5, result_update=False, image_update=False):
+        start = time.time()
+        action = True
+        try:
+            while action:
+                current_time = time.time()
+                elapsed_time = current_time - start
+                print(str(round(elapsed_time, 0)) + "Seconds elapsed", end='\r')
+                if elapsed_time > delay_sec:
+                    print("Called function")
 
-#todo
-# integrate darknet folder to S3Camera folder
-# and see how can we work.
+                    # Camera capture function called
+                    ret = self.cam_capture(webcam_id)
 
-#todo
-# Write function to do on board detection of images captured
-# and only upload the result.json
+                    # Camera upload function called
+                    if ret:
+                        print("Image Captured")
+                        ## calling darknet subprocess to detect objects in the image
+                        ## darknet isntalled locally in the same folder
+                        ## no dependecies on darknet locations
+                        self.subp_cmd_single_img_det_beta(local=True)
+                        self.draw_boxes()
 
+                        print("............Prediction done .......")
+                        pred = json.load(open(self.default_detection_ID))
+                        print(pred)
+
+                        # Upload prediction on bucket
+                        if result_update:
+                            self.camera_s3_client.upload_file(Filename=self.default_detection_ID,
+                                                              Bucket=self.camera_project_association,
+                                                              Key=self.default_detection_ID)
+                            print("Prediction results uploaded successfully")
+
+                        if image_update:
+                            self.camera_s3_client.upload_file(Filename=self.default_image_name,
+                                                              Bucket=self.camera_project_association,
+                                                              Key=self.default_image_name)
+                            print("Prediction Image uploaded successfully")
+                    else:
+                        print("Image Capturing failed")
+                        action = False
+                    # Resetting the timer
+                    start = time.time()
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt made")
+            interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
+
+        print("...........Stream stopped..............")
+        return action
+
+    def draw_boxes(self):
+        pred = json.load(open(self.default_detection_ID))
+        image = cv2.imread(self.default_image_name)
+
+        colors = (0, 255, 255)
+
+        for objects in pred[0].get('objects'):
+            yolo_coordinates = []
+            label = objects.get('name')
+            confidence = objects.get('confidence')
+            center_x = objects.get('relative_coordinates').get('center_x') * image.shape[1]
+            center_y = objects.get('relative_coordinates').get('center_y') * image.shape[0]
+            width = objects.get('relative_coordinates').get('width') * image.shape[1]
+            height = objects.get('relative_coordinates').get('height') * image.shape[0]
+
+            x_start = int(round(center_x - (width / 2)))
+            y_start = int(round(center_y - (height / 2)))
+            x_end = int(round(center_x + (width / 2)))
+            y_end = int(round(center_y + (height / 2)))
+
+            print(str(x_start) + ":" + str(y_start) + ":" + str(x_end) + ":" + str(y_end))
+            image = cv2.rectangle(image, (x_start, y_start), (x_end, y_end), colors, 1)
+            cv2.putText(image, "{} [{:.2f}]".format(label, float(confidence)),
+                        (x_start, y_start - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        colors, 2)
+
+        cv2.imwrite("box_img.jpg", image)
+
+# Prediction result evaluator
+class Lighting_schema:
+    detectec_objects = []
+    Active_scheme = []

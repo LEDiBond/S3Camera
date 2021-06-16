@@ -20,4 +20,5 @@ if __name__ == '__main__':
 
     #s.cam_stream(0)
 
-    s.cam_stream_upload()
+    #s.cam_stream_upload()
+    s.local_cam_detect(webcam_id=0,delay_sec=5,result_update=True, image_update=True)

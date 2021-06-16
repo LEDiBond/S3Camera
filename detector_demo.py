@@ -2,6 +2,7 @@
 # Press the green button in the gutter to run the script.
 # for uploading new images on AWS
 from S3Camera import S3Camera
+from darknet import draw_boxes
 
     # DEMO DETAIL ABOUT THE CAMERA
 CAM_PHY_ADDRESS = "12as 213 5442 3g223"
