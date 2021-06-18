@@ -93,13 +93,14 @@ class S3Camera:
             #gst v4l2 based image capture
             ## do cmd line capture using nvgstcapture
             from subprocess import run, call, DEVNULL, STDOUT, check_call
-            call(["nvgstcapture-1.0",
+            output = call(["nvgstcapture-1.0",
                   "--camsrc="+str(webcam_id), "--cap-dev-node="+str(webcam_id), ## webcam address /dev/video<N> where N is webcamid
                   "-m","1",
                   "--prev-res=4", "--image-res=4", #resolution 4 = 1900x1080
                   "--automate", "--capture-auto",
                   "--filename="+self.default_image_name  # image path and name
                   ],stdout=False)
+            if output == 0: return True
         else:
             ## opencv based image capture
             cam = cv2.VideoCapture(webcam_id)
