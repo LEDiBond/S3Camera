@@ -98,10 +98,11 @@ class S3Camera:
                   "-m","1",
                   "--prev-res=4", "--image-res=4", #resolution 4 = 1900x1080
                   "--automate", "--capture-auto",
-                  "--filename="+self.default_image_name  # image path and name
+                  "--file-name="+self.default_image_name  # image path and name
                   ],stdout=False)
             if output == 0:
                 ret = True
+                self.rename_nvgstcapture(self.default_image_name)
             else:
                 print("Error occured in subprocess")
                 ret = False
@@ -368,7 +369,7 @@ class S3Camera:
         cv2.imwrite("box_img.jpg", image)
 
 # Prediction result evaluator
-    def rename_nvgstcapture(image_name_partial):
+    def rename_nvgstcapture(self, image_name_partial):
         import os
         file = os.listdir()
         for i in file:
