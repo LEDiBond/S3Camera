@@ -12,10 +12,11 @@ import json
 
 class S3Camera:
 
-    def __init__(self, camera_phy_mac="undefined", camera_phy_port="undefined"):
+    def __init__(self, camera_phy_mac="undefined", camera_phy_port="undefined", nvgstcapture=False):
 
         self.camera_phy_mac = camera_phy_mac
         self.camera_phy_port = camera_phy_port
+        self.nvgstcapture = nvgstcapture
 
         # Camera project association is a Tag that is unique for a project. Managers at AWS S3 utilize this tag to create a bucket for the project which act as
         # a memory buffer for saving current image and results of detection.
@@ -87,14 +88,28 @@ class S3Camera:
         return data
 
     def cam_capture(self, webcam_id):
-        cam = cv2.VideoCapture(webcam_id)
-        height = 1080
-        width = 1900
-        cam.set(3, height)
-        cam.set(4, width)
-        img, frame = cam.read()
-        ret = cv2.imwrite(self.default_image_name, frame)
-        cam.release()
+        if self.nvgstcapture:
+            ## if nvsgtcapture is true then v4l2 based capture is done
+            #gst v4l2 based image capture
+            ## do cmd line capture using nvgstcapture
+            from subprocess import run, call, DEVNULL, STDOUT, check_call
+            call(["nvgstcapture-1.0",
+                  "--camsrc="+str(webcam_id), "--cap-dev-node="+str(webcam_id), ## webcam address /dev/video<N> where N is webcamid
+                  "-m","1",
+                  "--prev-res=4", "--image-res=4", #resolution 4 = 1900x1080
+                  "--automate", "--capture-auto",
+                  "--filename="+self.default_image_name  # image path and name
+                  ],stdout=False)
+        else:
+            ## opencv based image capture
+            cam = cv2.VideoCapture(webcam_id)
+            height = 1080
+            width = 1900
+            cam.set(3, height)
+            cam.set(4, width)
+            img, frame = cam.read()
+            ret = cv2.imwrite(self.default_image_name, frame)
+            cam.release()
         return ret
 
     def cam_stream(self, webcam_id, delay=10):
