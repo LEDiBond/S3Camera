@@ -368,6 +368,10 @@ class S3Camera:
         cv2.imwrite("box_img.jpg", image)
 
 # Prediction result evaluator
-class Lighting_schema:
-    detectec_objects = []
-    Active_scheme = []
+    def rename_nvgstcapture(image_name_partial):
+        import os
+        file = os.listdir()
+        for i in file:
+            if i[:len(image_name_partial)] == image_name_partial:
+                print('Copy found. renaming file to' + image_name_partial)
+                os.rename(i, image_name_partial + '.jpg')
