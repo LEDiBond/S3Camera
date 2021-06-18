@@ -100,7 +100,11 @@ class S3Camera:
                   "--automate", "--capture-auto",
                   "--filename="+self.default_image_name  # image path and name
                   ],stdout=False)
-            if output == 0: return True
+            if output == 0:
+                ret = True
+            else:
+                print("Error occured in subprocess")
+                ret = False
         else:
             ## opencv based image capture
             cam = cv2.VideoCapture(webcam_id)
