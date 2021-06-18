@@ -372,6 +372,6 @@ class S3Camera:
         import os
         file = os.listdir()
         for i in file:
-            if i[:len(image_name_partial)] == image_name_partial:
-                print('Copy found. renaming file to' + image_name_partial)
-                os.rename(i, image_name_partial + '.jpg')
+            if i[:len(image_name_partial)-4] == image_name_partial[:-4]:
+                print('Copy found. renaming file to ' + image_name_partial)
+                os.rename(i, image_name_partial[:-4] + '.jpg')
