@@ -13,9 +13,9 @@ if __name__ == '__main__':
     nvgstcapture = False
 
     s = S3Camera(CAM_PHY_ADDRESS, CAM_PHY_PORT, nvgstcapture=nvgstcapture)
-    s.cam_commission("image-buffer-test")
+    #s.cam_commission("image-buffer-test")
 
-    #s.cam_capture(0)
+    s.cam_capture(0)
     #s.cam_stream(0)
     #key = s.cam_upload_currentImg()
     #print("Image uploaded with key " + key)
@@ -39,6 +39,6 @@ if __name__ == '__main__':
                     s.dali_send(add, s.DALI_CMD_OFF)
 
     callback = MyDali_Callback()
-    s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False, callback = callback)
+    #s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False, callback = callback)
 
    # s.load_detections()

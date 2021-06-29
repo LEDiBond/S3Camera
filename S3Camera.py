@@ -124,8 +124,8 @@ class S3Camera:
             cam = cv2.VideoCapture(webcam_id)
             height = 1080
             width = 1900
-            cam.set(3, height)
-            cam.set(4, width)
+            #cam.set(3, height)
+            #cam.set(4, width)
             img, frame = cam.read()
             ret = cv2.imwrite(self.default_image_name, frame)
             cam.release()
