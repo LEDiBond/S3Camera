@@ -342,8 +342,8 @@ class S3Camera:
                                                               Bucket=self.camera_project_association,
                                                               Key=self.default_image_name)
                             print("Prediction Image uploaded successfully")
-
-                        callback
+                        self.load_detections()
+                        self.MyDali_Callback()
                     else:
                         print("Image Capturing failed")
                         action = False
@@ -419,11 +419,11 @@ class S3Camera:
             objs = data[0]["objects"]
             for obj in objs:
                 class_name = obj.get('name')
-                if class_name == 'person':
+                if class_name == "person":
                     person_count = person_count + 1
-                if class_name == 'book':
+                if class_name == "book":
                     book_count = book_count + 1
-                if class_name == 'laptop':
+                if class_name == "laptop":
                     laptop_count = laptop_count + 1
                 if class_name != ("person" or "book" or "laptop"):
                     others_count = others_count + 1
@@ -454,3 +454,24 @@ class S3Camera:
             print("Cannot send value to address")
             return False
 
+    def MyDali_Callback(self):
+        if self.Hasseb_init():
+            print(self.detection_counts)
+            if self.detection_counts['Persons'] == 1:
+                print("-------------- Only one person found ----------")
+                for add in self.DALI_ADDRESS_LIST:
+                    print("Firirng DALI CMD at " + str(add))
+                    self.dali_send(add, self.DALI_CMD_MILD)
+            if self.detection_counts['Persons'] >1:
+                print("-------------- Only one person found ----------")
+                for add in self.DALI_ADDRESS_LIST:
+                    print("Firirng DALI CMD at " + str(add))
+                    self.dali_send(add, self.DALI_CMD_ON)
+            if self.detection_counts['Persons'] == 0:
+                print("-------------- No person found ----------")
+                for add in self.DALI_ADDRESS_LIST:
+                    print("Firirng DALI CMD at " + str(add))
+                    self.dali_send(add, self.DALI_CMD_OFF)
+            return True
+        else:
+            return False

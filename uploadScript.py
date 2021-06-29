@@ -11,11 +11,10 @@ if __name__ == '__main__':
     ## Make flag true if working on Jetson Xavier
 
     nvgstcapture = False
-
     s = S3Camera(CAM_PHY_ADDRESS, CAM_PHY_PORT, nvgstcapture=nvgstcapture)
-    #s.cam_commission("image-buffer-test")
 
-    s.cam_capture(0)
+    #s.cam_commission("image-buffer-test")
+    #s.cam_capture(0)
     #s.cam_stream(0)
     #key = s.cam_upload_currentImg()
     #print("Image uploaded with key " + key)
@@ -26,19 +25,6 @@ if __name__ == '__main__':
 
     #s.cam_stream_upload()
 
-    def MyDali_Callback():
-        if s.Hasseb_init():
-            if s.detection_counts.get("Persons") == 1:
-                for add in s.DALI_ADDRESS_LIST:
-                    s.dali_send(add, s.DALI_CMD_MILD)
-            if s.detection_counts.get("Persons") >1:
-                for add in s.DALI_ADDRESS_LIST:
-                    s.dali_send(add, s.DALI_CMD_ON)
-            if s.detection_counts.get("Persons") == 0:
-                for add in s.DALI_ADDRESS_LIST:
-                    s.dali_send(add, s.DALI_CMD_OFF)
+    s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False)
 
-    callback = MyDali_Callback()
-    #s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False, callback = callback)
-
-   # s.load_detections()
+    #s.load_detections()

@@ -1,7 +1,5 @@
-from dali.address import Short
-from dali.driver.daliserver import DaliServer
+from dali.driver import hasseb
+from dali.gear import general
 
-add = Short(54)
-print(add.address)
-
-l = DaliServer()
+dev = hasseb.SyncHassebDALIUSBDriver()
+print(dev.device_found)
