@@ -8,6 +8,8 @@ from termcolor import colored
 from datetime import datetime
 import os
 import json
+import dali.driver.hasseb as hasseb
+import dali.gear.general as gen
 
 
 class S3Camera:
@@ -30,6 +32,17 @@ class S3Camera:
         self.default_detection_ID = "detection_result.json"
         self.darknet_detection_ID = "result.json"
         self.default_downloaded_img_ID = "Downloaded_file.jpg"
+
+        self.detection_counts = {"Persons":0,"Books":0, "Laptops":0 , "Others":0}
+
+        # DALI attributes are defined here
+        self.DALI_CMD_OFF = 0
+        self.DALI_CMD_ON = 254
+        self.DALI_CMD_MILD = 200
+        self.DALI_ADDRESS_LIST = [0]
+        self.DALI_ADDRESS_LIST_FILENAME = "address_list.json"
+        self.DALI_USB_INTERFACE = "Hasseb USB Interface"
+        self.DALI_USB_DEVICE = hasseb.SyncHassebDALIUSBDriver()
 
     def __str__(self):
         return "Camera Physical address : " + self.camera_phy_mac + " \n " + \
@@ -205,7 +218,7 @@ class S3Camera:
         print("...........Stream Download stopped..............")
         return action
 
-    def cam_stream_detect(self, delay_sec=5, online_update=True):
+    def cam_stream_detect(self, delay_sec=5, online_update=True, callback=None):
         # has dependencies on darknet
         start = time.time()
         action = True
@@ -226,7 +239,7 @@ class S3Camera:
                         ## calling darknet subprocess to detect objects in the image
                         ## darknet isntalled locally in the same folder
                         ## no dependecies on darknet locations
-                        self.subp_cmd_single_img_det_beta()
+                        self.subp_darknet_cmd()
 
                         print("............Prediction done .......")
                         pred = json.load(open("result.json"))
@@ -265,7 +278,8 @@ class S3Camera:
 
     # if local = True then current image is used in prediction
     # if local is false then image is downloaded
-    def subp_cmd_single_img_det_beta(self, local=True):
+    def subp_darknet_cmd(self, local=True):
+        info = "Daknet command for single image detection"
         from subprocess import run, call, DEVNULL, STDOUT, check_call
         if not local:
             call(["./darknet", "detector", "test", "cfg/coco.data",
@@ -289,7 +303,7 @@ class S3Camera:
     # Function for site PC with cam detection and upload facilities
     # Image captured locally and fed to darknet installed on the system
     # Once the predection is made, The result jason script is uploaded along with curre
-    def local_cam_detect(self, webcam_id=0, delay_sec=5, result_update=False, image_update=False):
+    def local_cam_detect(self, webcam_id=0, delay_sec=5, result_update=False, image_update=False, callback=None):
         start = time.time()
         action = True
         try:
@@ -309,7 +323,7 @@ class S3Camera:
                         ## calling darknet subprocess to detect objects in the image
                         ## darknet isntalled locally in the same folder
                         ## no dependecies on darknet locations
-                        self.subp_cmd_single_img_det_beta(local=True)
+                        self.subp_darknet_cmd(local=True)
                         self.draw_boxes()
 
                         print("............Prediction done .......")
@@ -328,6 +342,8 @@ class S3Camera:
                                                               Bucket=self.camera_project_association,
                                                               Key=self.default_image_name)
                             print("Prediction Image uploaded successfully")
+
+                        callback
                     else:
                         print("Image Capturing failed")
                         action = False
@@ -376,3 +392,65 @@ class S3Camera:
             if i[:len(image_name_partial)-4] == image_name_partial[:-4]:
                 print('Copy found. renaming file to ' + image_name_partial)
                 os.rename(i, image_name_partial[:-4] + '.jpg')
+
+    def address_list_populator(self):
+        data = json.load(open(self.DALI_ADDRESS_LIST_FILENAME))
+        if data is not None:
+            print("ADDRESS FILE LOADED")
+            self.DALI_ADDRESS_LIST = data["ADDRESS_LIST"]
+        else :
+            print("ADDRESS FILE NOT LOADED, Loading addresslist with a short address 0")
+            self.DALI_ADDRESS_LIST = [0]
+
+    def reset_detections(self):
+        self.detection_counts["Persons"] = 0
+        self.detection_counts["Books"] = 0
+        self.detection_counts["Laptops"] = 0
+        self.detection_counts["Others"] = 0
+        print("Detections RESET")
+
+    def load_detections(self):
+        book_count = 0
+        laptop_count = 0
+        person_count = 0
+        others_count = 0
+        if open(self.default_detection_ID):
+            data = json.load(open(self.default_detection_ID))
+            objs = data[0]["objects"]
+            for obj in objs:
+                class_name = obj.get('name')
+                if class_name == 'person':
+                    person_count = person_count + 1
+                if class_name == 'book':
+                    book_count = book_count + 1
+                if class_name == 'laptop':
+                    laptop_count = laptop_count + 1
+                if class_name != ("person" or "book" or "laptop"):
+                    others_count = others_count + 1
+
+            self.detection_counts["Persons"] = person_count
+            self.detection_counts["Books"] = book_count
+            self.detection_counts["Laptops"] = laptop_count
+            self.detection_counts["Others"] = others_count
+            print("Detection Loaded successfully")
+        else:
+            print("Cannot open the detection json file")
+            print("Please try again with a valid detection ID")
+
+    def Hasseb_init(self):
+        if (self.DALI_USB_DEVICE.device_found == None):
+            print("DALI initialization failed, No device found !! Please try running the program with root privileges")
+            return None
+        elif self.DALI_USB_DEVICE.device_found == 1:
+            print("HASSEB DALI USB INTERFACE has been found ")
+            return True
+
+    def dali_send(self, add, value):
+        # This is an S3 wrapper for easier dali command send
+        try:
+            self.DALI_USB_DEVICE.send(gen.DAPC(add,value))
+            return True
+        except:
+            print("Cannot send value to address")
+            return False
+
