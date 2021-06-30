@@ -18,6 +18,11 @@ class S3Camera:
 
         self.camera_phy_mac = camera_phy_mac
         self.camera_phy_port = camera_phy_port
+        self.aws_credential_file_neme = "credentials.txt"
+        file = open(self.aws_credential_file_neme)
+        lines = file.readlines()
+        self.__ACCESS_ID__ = lines[1][20:-1]
+        self.__ACCESS_KEY__ = lines[2][24:-1]
         self.nvgstcapture = nvgstcapture
 
         # Camera project association is a Tag that is unique for a project. Managers at AWS S3 utilize this tag to create a bucket for the project which act as
@@ -53,7 +58,7 @@ class S3Camera:
         self.camera_project_association = project_name
 
         if service == boto3.resource(service).meta.service_name:
-            self.camera_s3_client = boto3.client(service)
+            self.camera_s3_client = boto3.client(service,aws_access_key_id=self.__ACCESS_ID__,aws_secret_access_key=self.__ACCESS_KEY__)
             for bucket in self.camera_s3_client.list_buckets()['Buckets']:
                 if bucket['Name'] == self.camera_project_association:
                     print("Related Project found")

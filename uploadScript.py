@@ -13,7 +13,7 @@ if __name__ == '__main__':
     nvgstcapture = False
     s = S3Camera(CAM_PHY_ADDRESS, CAM_PHY_PORT, nvgstcapture=nvgstcapture)
 
-    #s.cam_commission("image-buffer-test")
+    s.cam_commission("image-buffer-test")
     #s.cam_capture(0)
     #s.cam_stream(0)
     #key = s.cam_upload_currentImg()
@@ -25,6 +25,7 @@ if __name__ == '__main__':
 
     #s.cam_stream_upload()
 
-    s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False)
+    #s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False)
 
     #s.load_detections()
+
