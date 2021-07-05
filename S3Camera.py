@@ -488,14 +488,14 @@ class S3Camera:
                 for add in self.DALI_ADDRESS_LIST:
                     print("Firirng DALI CMD at " + str(add))
                     self.dali_send(add, self.DALI_CMD_OFF)
-
-            self.detection_counts_buffer = self.detection_counts
             return True
         else:
             return False
 
     def Detection_state_change(self):
-        file_status = True
         if self.detection_counts == self.detection_counts_buffer:
             file_status = False
+        else:
+            file_status = True
+            self.detection_counts_buffer = self.detection_counts
         return file_status
