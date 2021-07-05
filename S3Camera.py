@@ -117,7 +117,7 @@ class S3Camera:
                 output = call(["nvgstcapture-1.0",
                   "--camsrc="+str(webcam_id), "--cap-dev-node="+str(webcam_id), ## webcam address /dev/video<N> where N is webcamid
                   "-m","1",
-                  "--prev-res=4", "--image-res=4", #resolution 4 = 1900x1080
+                  "--prev-res=3", "--image-res=3", #resolution 4 = 1900x1080
                   "--automate", "--capture-auto",
                   "--file-name="+self.default_image_name  # image path and name
                   ],stdout=False)
@@ -330,10 +330,10 @@ class S3Camera:
                 if elapsed_time > delay_sec:
                     print("Called function")
 
-                    # Camera capture function called
+                # Camera capture function called
                     ret = self.cam_capture(webcam_id)
 
-                    # Camera upload function called
+                # Camera upload function called
                     if ret:
                         print("Image Captured")
                         ## calling darknet subprocess to detect objects in the image
@@ -471,7 +471,7 @@ class S3Camera:
             return False
 
     def MyDali_Callback(self):
-        if self.Hasseb_init() and self.Detection_state_change():
+        if (self.Hasseb_init()): # and self.Detection_state_change()
             print(self.detection_counts)
             if self.detection_counts['Persons'] == 1:
                 print("------------- Only one person found ----------")

@@ -18,14 +18,11 @@ if __name__ == '__main__':
     #s.cam_stream(0)
     #key = s.cam_upload_currentImg()
     #print("Image uploaded with key " + key)
-
     #s.cam_download_currentImg()
-
     #s.cam_stream(0)
-
     #s.cam_stream_upload()
 
-    #s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False)
+    s.local_cam_detect(webcam_id=0, delay_sec=5, result_update=False, image_update=False)
 
     #s.load_detections()
 
