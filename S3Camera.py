@@ -39,6 +39,7 @@ class S3Camera:
         self.default_downloaded_img_ID = "Downloaded_file.jpg"
 
         self.detection_counts = {"Persons":0,"Books":0, "Laptops":0 , "Others":0}
+        self.detection_counts_buffer = {"Persons": 0, "Books": 0, "Laptops": 0, "Others": 0}
 
         # DALI attributes are defined here
         self.DALI_CMD_OFF = 0
@@ -111,19 +112,26 @@ class S3Camera:
             #gst v4l2 based image capture
             ## do cmd line capture using nvgstcapture
             from subprocess import run, call, DEVNULL, STDOUT, check_call
-            output = call(["nvgstcapture-1.0",
+            ## TODO : make image capture a Try command
+            try:
+                output = call(["nvgstcapture-1.0",
                   "--camsrc="+str(webcam_id), "--cap-dev-node="+str(webcam_id), ## webcam address /dev/video<N> where N is webcamid
                   "-m","1",
                   "--prev-res=4", "--image-res=4", #resolution 4 = 1900x1080
                   "--automate", "--capture-auto",
                   "--file-name="+self.default_image_name  # image path and name
                   ],stdout=False)
-            if output == 0:
-                ret = True
-                self.rename_nvgstcapture(self.default_image_name)
-            else:
+                if output == 0:
+                    ret = True
+                    self.rename_nvgstcapture(self.default_image_name)
+                else:
+                    print("Error occured in subprocess")
+                    ret = False
+            except:
+                print("Done Done")
                 print("Error occured in subprocess")
                 ret = False
+
         else:
             ## opencv based image capture
             cam = cv2.VideoCapture(webcam_id)
@@ -132,7 +140,10 @@ class S3Camera:
             #cam.set(3, height)
             #cam.set(4, width)
             img, frame = cam.read()
-            ret = cv2.imwrite(self.default_image_name, frame)
+            try:
+                ret = cv2.imwrite(self.default_image_name, frame)
+            except:
+                ret = False
             cam.release()
         return ret
 
@@ -460,23 +471,31 @@ class S3Camera:
             return False
 
     def MyDali_Callback(self):
-        if self.Hasseb_init():
+        if self.Hasseb_init() and self.Detection_state_change():
             print(self.detection_counts)
             if self.detection_counts['Persons'] == 1:
-                print("-------------- Only one person found ----------")
+                print("------------- Only one person found ----------")
                 for add in self.DALI_ADDRESS_LIST:
                     print("Firirng DALI CMD at " + str(add))
                     self.dali_send(add, self.DALI_CMD_MILD)
             if self.detection_counts['Persons'] >1:
-                print("-------------- Only one person found ----------")
+                print("------------- Only one person found ----------")
                 for add in self.DALI_ADDRESS_LIST:
                     print("Firirng DALI CMD at " + str(add))
                     self.dali_send(add, self.DALI_CMD_ON)
             if self.detection_counts['Persons'] == 0:
-                print("-------------- No person found ----------")
+                print("------------- No person found ----------")
                 for add in self.DALI_ADDRESS_LIST:
                     print("Firirng DALI CMD at " + str(add))
                     self.dali_send(add, self.DALI_CMD_OFF)
+
+            self.detection_counts_buffer = self.detection_counts
             return True
         else:
             return False
+
+    def Detection_state_change(self):
+        file_status = True
+        if self.detection_counts == self.detection_counts_buffer:
+            file_status = False
+        return file_status
