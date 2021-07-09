@@ -362,12 +362,14 @@ class S3Camera:
                         self.MyDali_Callback()
                     else:
                         print("Image Capturing failed")
-                        action = False
+                        print("Please Check the Camera configuration : Running Detection on previous captured Image")
+
                     # Resetting the timer
                     start = time.time()
         except KeyboardInterrupt:
             print("Keyboard Interrupt made")
             interrupt = input("Enter 'stop' to exit Stream and 'C' to continue:   ")
+            action = False
 
         print("...........Stream stopped..............")
         return action
